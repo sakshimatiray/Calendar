@@ -1,77 +1,92 @@
-const currentDate = document.querySelector(".current-date");
-const daysTag = document.querySelector(".days");
-const prevNextIcon = document.querySelectorAll(".icons span");
+let calendar = document.querySelector('.calendar')
 
+const month_names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
- 
-let date  = new Date(); // Getting new date, current year and  current month
-// console.log(date);
-let currentYear = date.getFullYear();
-// console.log(currentYear);
-let currentMonth = date.getMonth();
-// console.log(currentMonth);
-// console.log(date,currentYear,currentMonth);
-const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-const renderCalender = () =>{
-    let firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay(); // getting first day of month
-    // console.log(firstDayOfMonth);
-    let lastDateOfMonth = new Date(currentYear, currentMonth + 1, 0).getDate(); // getting last date of month
-    // console.log(lastDateOfMonth);
-    let lastDayOfMonth = new Date(currentYear, currentMonth, lastDateOfMonth).getDay(); // getting last day of  month
-    // console.log(lastDayOfMonth);
-    let lastDateOfLastMonth = new Date(currentYear, currentMonth, 0).getDate(); // getting last date of previous month
-    // console.log(lastDateOfLastMont);
-
-    let liTag = "";
-    for(let i = firstDayOfMonth; i>0; i--){ // creating li of previous month last days
-        liTag +=`<li class="inactive">${lastDateOfLastMonth - i + 1}</li>`;
-    }
-    
-     
-    for(let i = 1; i <= lastDateOfMonth; i++){ // creating li of all days of current month
-        // console.log(i);
-        // adding active class to do li if the current day, month and year matched
-
-        let isToday = i === date.getDate() && currentMonth === new Date().getMonth() && currentYear ===new Date().getFullYear() ? "active" : "";
-        liTag += `<li class="${isToday}">${i}</li>`;
-
-        // console.log(liTag);
-        // console.log(isToday);
-    }
-
-    for(let i = lastDayOfMonth; i < 6; i++){ // creating li of next month first days
-        liTag += `<li class="inactive">${ i - lastDayOfMonth  + 1} </li>`;
-        // console.log(liTag);
-    }
-    currentDate.innerText = `${months[currentMonth]} ${currentYear}`;
-    // console.log(currentDate);
-    daysTag.innerHTML = liTag;
-    // console.log(daysTag);
-
-
+isLeapYear = (year) => {
+    return (year % 4 === 0 && year % 100 !== 0 && year % 400 !== 0) || (year % 100 === 0 && year % 400 ===0)
 }
-renderCalender();
-// adding click event on the  previous and next icon
-prevNextIcon.forEach( icon => {
-    icon.addEventListener("click", () => { //
-        // console.log(icon);
-        // if clicked icon is previous icon then decrement current month by 1 and increment it by 1
-        currentMonth = icon.id === "prev" ? currentMonth -1 : currentMonth + 1;
-        // console.log(currentMonth);
 
-        // next year when current yaer end
-        if(currentMonth <0 || currentMonth > 11){
-            // creating a new date of current year & month and pass it as date value
-            date = new Date(currentYear, currentMonth); 
-            currentYear = date.getFullYear(); // updating current yaer with new date year
-            currentMonth = date.getMonth();   // updating current month wiht new date month
+getFebDays = (year) => {
+    return isLeapYear(year) ? 29 : 28
+}
+
+generateCalendar = (month, year) => {
+
+    let calendar_days = calendar.querySelector('.calendar-days')
+    let calendar_header_year = calendar.querySelector('#year')
+
+    let days_of_month = [31, getFebDays(year), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+    calendar_days.innerHTML = ''
+
+    let currDate = new Date()
+    if (!month) month = currDate.getMonth()
+    if (!year) year = currDate.getFullYear()
+
+    let curr_month = `${month_names[month]}`
+    month_picker.innerHTML = curr_month
+    calendar_header_year.innerHTML = year
+
+    // get first day of month
+    
+    let first_day = new Date(year, month, 1)
+
+    for (let i = 0; i <= days_of_month[month] + first_day.getDay() - 1; i++) {
+        let day = document.createElement('div')
+        if (i >= first_day.getDay()) {
+            day.classList.add('calendar-day-hover')
+            day.innerHTML = i - first_day.getDay() + 1
+            day.innerHTML += `<span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>`
+            if (i - first_day.getDay() + 1 === currDate.getDate() && year === currDate.getFullYear() && month === currDate.getMonth()) {
+                day.classList.add('curr-date')
+            }
         }
-        else{ // else pass new Date as date value
-            date  = new Date();
-        }
-        renderCalender();
-    });
+        calendar_days.appendChild(day)
+    }
+}
 
+let month_list = calendar.querySelector('.month-list')
 
-});
+month_names.forEach((e, index) => {
+    let month = document.createElement('div')
+    month.innerHTML = `<div data-month="${index}">${e}</div>`
+    month.querySelector('div').onclick = () => {
+        month_list.classList.remove('show')
+        curr_month.value = index
+        generateCalendar(index, curr_year.value)
+    }
+    month_list.appendChild(month)
+})
+
+let month_picker = calendar.querySelector('#month-picker')
+
+month_picker.onclick = () => {
+    month_list.classList.add('show')
+}
+
+let currDate = new Date()
+
+let curr_month = {value: currDate.getMonth()}
+let curr_year = {value: currDate.getFullYear()}
+
+generateCalendar(curr_month.value, curr_year.value)
+
+document.querySelector('#prev-year').onclick = () => {
+    --curr_year.value
+    generateCalendar(curr_month.value, curr_year.value)
+}
+
+document.querySelector('#next-year').onclick = () => {
+    ++curr_year.value
+    generateCalendar(curr_month.value, curr_year.value)
+}
+
+let dark_mode_toggle = document.querySelector('.dark-mode-switch')
+
+dark_mode_toggle.onclick = () => {
+    document.querySelector('body').classList.toggle('light')
+    document.querySelector('body').classList.toggle('dark')
+}
